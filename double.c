@@ -24,7 +24,7 @@ struct arg_struct {
 unsigned char lookup[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
 
 unsigned char *contents;
-unsigned char *status;
+unsigned char status[combinations] = {0};
 
 void *check(void *arguments){
     unsigned int index;
@@ -38,6 +38,7 @@ void *check(void *arguments){
         /*pthread_mutex_lock(mutex);*/
         if (status[index] != 0){
             *args->doub = 1;
+            return NULL;
         }
         status[index] = 1;
         /*pthread_mutex_unlock(mutex);*/
@@ -49,21 +50,21 @@ int main(int argc, char** argv){
     int file;
     struct stat s;
     size_t filesize;
-    /*unsigned char *ptr;*/
-    /*unsigned int index;*/
     int i;
+    pthread_t tid[4 * sizeof(pthread_t)];
+    struct arg_struct *arg;
+    unsigned int intervall;
+    unsigned char doub = 0;
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
     file = open(argv[1], O_RDONLY);
     fstat(file, &s);
     filesize = s.st_size;
     contents = mmap(0, filesize, PROT_READ, MAP_PRIVATE, file, 0);
 
+    intervall = (filesize)/4;
 
-    /*unsigned int filelength;*/
-    /*long long reg;*/
-    /*int j,k,l,m;*/
     /*long long sub = 0x303030414141;*/
-    status = (unsigned char*) calloc(combinations, 1);
 
     /*unsigned char ******occ = (unsigned char******) malloc(combinations*2);*/
     /*memset(occ, 0, combinations);*/
@@ -87,17 +88,6 @@ int main(int argc, char** argv){
         /*}*/
     /*}*/
 
-    /*int = fopen(argv[1], "r");*/
-    /*fseek(file, 0, SEEK_END);*/
-    /*filelength = ftell(file);*/
-    /*rewind(file);*/
-    
-    /*fread(contents, filelength, 1, file);*/
-    pthread_t *tid = malloc( 4 * sizeof(pthread_t) );
-    struct arg_struct *arg;
-    unsigned int intervall = (filesize)/4;
-    unsigned char doub = 0;
-    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     for (i = 0; i < 4; i++){
         arg = (struct arg_struct*) malloc(sizeof(struct arg_struct));
         arg->start = i * intervall;
@@ -109,13 +99,13 @@ int main(int argc, char** argv){
 
     for (i = 0; i < 4; i++){
         pthread_join(tid[i], NULL);
+        if (doub == 1){
+            puts("Dubblett");
+            return 0;
+        }
     }
 
-    if (doub == 1){
-        puts("Dubblett");
-    } else {
-        puts("Ej dubblett");
-    }
+    puts("Ej dubblett");
 
     return 0;
 }
