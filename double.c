@@ -17,21 +17,24 @@
 struct arg_struct {
     unsigned int start;
     unsigned int intervall;
-    unsigned char *content;
-    unsigned char *status;
     unsigned char *doub;
     pthread_mutex_t *mutex;
 };
 
+unsigned char lookup[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+
+unsigned char *contents;
+unsigned char *status;
+
 void *check(void *arguments){
     unsigned int index;
     struct arg_struct *args = (struct arg_struct*) arguments;
-    unsigned char *ptr = args->content + args->start;
+    unsigned char *ptr = contents + args->start;
     unsigned char *end = ptr + args->intervall;
-    unsigned char *status = args->status;
-    pthread_mutex_t *mutex = args->mutex;
+    /*pthread_mutex_t *mutex = args->mutex;*/
     for (; ptr < end; ptr += 8){
         index = (ptr[0]-0x41) + (ptr[1]-0x41)*ofs_4 + (ptr[2]-0x41)*ofs_3 + (ptr[3]-0x30)*ofs_2 + (ptr[4]-0x30)*ofs_1 + (ptr[5]-0x30)*ofs_0;
+        /*index = lookup[ptr[0]] + lookup[ptr[1]]*ofs_4 + lookup[ptr[2]]*ofs_3 + lookup[ptr[3]]*ofs_2 + lookup[ptr[4]]*ofs_1 + lookup[ptr[5]]*ofs_0;*/
         /*pthread_mutex_lock(mutex);*/
         if (status[index] != 0){
             *args->doub = 1;
@@ -46,7 +49,6 @@ int main(int argc, char** argv){
     int file;
     struct stat s;
     size_t filesize;
-    unsigned char *contents;
     /*unsigned char *ptr;*/
     /*unsigned int index;*/
     int i;
@@ -61,8 +63,7 @@ int main(int argc, char** argv){
     /*long long reg;*/
     /*int j,k,l,m;*/
     /*long long sub = 0x303030414141;*/
-    unsigned char *tjenna  = (unsigned char*) malloc(combinations);
-    memset(tjenna, 0, combinations);
+    status = (unsigned char*) calloc(combinations, 1);
 
     /*unsigned char ******occ = (unsigned char******) malloc(combinations*2);*/
     /*memset(occ, 0, combinations);*/
@@ -94,15 +95,13 @@ int main(int argc, char** argv){
     /*fread(contents, filelength, 1, file);*/
     pthread_t *tid = malloc( 4 * sizeof(pthread_t) );
     struct arg_struct *arg;
-    unsigned int intervall = (filesize/8)/4;
+    unsigned int intervall = (filesize)/4;
     unsigned char doub = 0;
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     for (i = 0; i < 4; i++){
         arg = (struct arg_struct*) malloc(sizeof(struct arg_struct));
         arg->start = i * intervall;
         arg->intervall = intervall;
-        arg->content = contents;
-        arg->status = tjenna;
         arg->doub = &doub;
         arg->mutex = &mutex;
         pthread_create(&tid[i], NULL, check, arg);
