@@ -39,28 +39,28 @@ void *check(void *arguments){
 }
 
 int main(int argc, char** argv){
-	int i;
-	HANDLE tid[THREADS];
-	struct arg_struct *arg;
-	char * pszFilename = argv[1];
-	
-	HANDLE hFileMap;
-	HANDLE hFile = CreateFileA(pszFilename, GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    int i;
+    HANDLE tid[THREADS];
+    struct arg_struct *arg;
+    char * pszFilename = argv[1];
 
-	hFileMap = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+    HANDLE hFileMap;
+    HANDLE hFile = CreateFileA(pszFilename, GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-	contents = MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, size);
+    hFileMap = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+
+    contents = MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, size);
 
     intervall = (size)/THREADS;
 
     for (i = 0; i < THREADS; i++){
         arg = (struct arg_struct*) malloc(sizeof(struct arg_struct));
         arg->start = i * intervall;
-		tid[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) check, arg, 0, NULL);
+        tid[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) check, arg, 0, NULL);
     }
 
     for (i = 0; i < THREADS; i++){
-			WaitForSingleObject(tid[i], INFINITE);
+        WaitForSingleObject(tid[i], INFINITE);
         if (doub == 1){
             puts("Dubblett");
             return 0;
@@ -68,6 +68,6 @@ int main(int argc, char** argv){
     }
 
     puts("Ej dubblett");
-	
+
     return 0;
 }
